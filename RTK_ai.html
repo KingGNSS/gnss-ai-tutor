@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNSS观测方程差分动态推导互动教学</title>
+    <style>
+        :root {
+            --bg-main: #f1f5f9;      /* 浅灰蓝背景 */
+            --bg-card: #ffffff;      /* 纯白卡片 */
+            --text-main: #0f172a;    /* 深色主文本 */
+            --text-muted: #64748b;   /* 灰色辅助文本 */
+            --primary: #0284c7;      /* 强化对比的深蓝色 */
+            --secondary: #16a34a;    /* 强化对比的绿色 */
+            --accent-orange: #ea580c;/* 橙色 */
+            --accent-red: #dc2626;   /* 红色 */
+            --accent-yellow: #b45309;/* 深黄色 */
+            --border: #cbd5e1;       /* 浅灰色边框 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                grid-template-columns: 1.1fr 0.9fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .visual-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .interactive-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-red);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .svg-container {
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .legend {
+            width: 100%;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .step-wizard {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .wizard-node {
+            text-align: center;
+            flex: 1;
+            cursor: pointer;
+            position: relative;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .wizard-node.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .wizard-node.active::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+
+        .math-content {
+            min-height: 400px;
+        }
+
+        .explanation-box {
+            background: rgba(2, 132, 199, 0.05);
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .math-expr {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .math-block {
+            background: #f8fafc;
+            padding: 14px;
+            margin: 12px 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            white-space: nowrap;
+            color: var(--text-main);
+        }
+
+        .p-obs { color: var(--text-main); font-weight: bold; }
+        .p-rho { color: #334155; }
+        .p-dtr { color: var(--accent-orange); font-weight: bold; }
+        .p-dts { color: var(--primary); font-weight: bold; }
+        .p-ion { color: var(--accent-red); }
+        .p-tro { color: var(--secondary); }
+        .p-amb { color: var(--accent-yellow); font-weight: bold; }
+
+        .strike {
+            position: relative;
+            opacity: 0.25;
+        }
+        .strike::after {
+            content: "";
+            position: absolute;
+            left: -2px;
+            top: 50%;
+            width: calc(100% + 4px);
+            height: 2px;
+            background: #ef4444;
+            transform: rotate(-10deg);
+        }
+
+        .diff-operator {
+            color: #e11d48;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .signal-line {
+            transition: stroke-dashoffset 0.1s linear, stroke-width 0.2s, stroke 0.2s, opacity 0.3s;
+            stroke-dasharray: 6, 6;
+            animation: strokeAnim 5s linear infinite;
+        }
+        @keyframes strokeAnim {
+            to { stroke-dashoffset: -60; }
+        }
+        
+        .receiver, .satellite {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .atm-text {
+            font-size: 12px;
+            fill: var(--text-muted);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GNSS观测方程差分动态推导教学系统</h1>
+        <p>基于经典载波相位/伪距观测方程，交互式探索“非差 → 单差 → 双差”消差思想</p>
+    </header>
+
+    <div class="container">
+        <div class="card visual-panel">
+            <div class="interactive-controls">
+                <div class="toggle-container">
+                    <span>基线长度设置：</span>
+                    <label class="switch">
+                        <input type="checkbox" id="baseline-toggle" onchange="toggleBaseline()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="baseline-label" style="font-weight: bold; color: var(--secondary);">短基线 (&lt; 10 km)</span>
+                </div>
+            </div>
+
+            <div class="svg-container">
+                <svg id="gnss-svg" viewBox="0 0 600 450" width="100%">
+                    <defs>
+                        <linearGradient id="atm-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#c084fc" stop-opacity="0.05" />
+                            <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.15" />
+                            <stop offset="100%" stop-color="#34d399" stop-opacity="0.05" />
+                        </linearGradient>
+                    </defs>
+
+                    <rect width="600" height="450" fill="#ffffff" />
+
+                    <rect id="atmosphere" x="0" y="140" width="600" height="100" fill="url(#atm-grad)" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4" opacity="0.8"/>
+                    <text x="20" y="165" class="atm-text" style="fill: #7c3aed; font-weight: 500;">电离层 (Ionosphere Delay)</text>
+                    <text x="20" y="215" class="atm-text" style="fill: #16a34a; font-weight: 500;">对流层 (Troposphere Delay)</text>
+
+                    <line x1="0" y1="390" x2="600" y2="390" stroke="#cbd5e1" stroke-width="4" />
+
+                    <line id="ray-A1" x1="160" y1="50" x2="140" y2="360" stroke="#0284c7" stroke-width="2.5" class="signal-line" />
+                    <line id="ray-B1" x1="160" y1="50" x2="240" y2="360" stroke="#16a34a" stroke-width="2.5" class="signal-line" />
+                    <line id="ray-A2" x1="440" y1="50" x2="140" y2="360" stroke="#dc2626" stroke-width="2.5" class="signal-line" />
+                    <line id="ray-B2" x1="440" y1="50" x2="240" y2="360" stroke="#d97706" stroke-width="2.5" class="signal-line" />
+
+                    <g id="sat1" class="satellite" transform="translate(160, 50)">
+                        <rect x="-25" y="-6" width="15" height="12" fill="#64748b" rx="1" />
+                        <rect x="10" y="-6" width="15" height="12" fill="#64748b" rx="1" />
+                        <line x1="-10" y1="0" x2="10" y2="0" stroke="#94a3b8" stroke-width="2" />
+                        <rect x="-10" y="-10" width="20" height="20" fill="#0284c7" rx="2" />
+                        <circle cx="0" cy="0" r="4" fill="#e0f2fe" />
+                        <polygon points="-4,10 4,10 0,16" fill="#64748b" />
+                        <text x="-22" y="-16" fill="#0284c7" font-size="12" font-weight="bold">卫星 1 (s1)</text>
+                    </g>
+
+                    <g id="sat2" class="satellite" transform="translate(440, 50)">
+                        <rect x="-25" y="-6" width="15" height="12" fill="#64748b" rx="1" />
+                        <rect x="10" y="-6" width="15" height="12" fill="#64748b" rx="1" />
+                        <line x1="-10" y1="0" x2="10" y2="0" stroke="#94a3b8" stroke-width="2" />
+                        <rect x="-10" y="-10" width="20" height="20" fill="#0284c7" rx="2" />
+                        <circle cx="0" cy="0" r="4" fill="#e0f2fe" />
+                        <polygon points="-4,10 4,10 0,16" fill="#64748b" />
+                        <text x="-22" y="-16" fill="#dc2626" font-size="12" font-weight="bold">卫星 2 (s2)</text>
+                    </g>
+
+                    <g id="recA" class="receiver" transform="translate(140, 360)">
+                        <line x1="0" y1="0" x2="-12" y2="30" stroke="#64748b" stroke-width="2.5" />
+                        <line x1="0" y1="0" x2="12" y2="30" stroke="#64748b" stroke-width="2.5" />
+                        <path d="M -10 0 A 10 10 0 0 1 10 0 Z" fill="#334155" stroke="#1e293b" stroke-width="1" />
+                        <text x="-28" y="45" fill="#0f172a" font-size="12" font-weight="bold">接收机 A (r)</text>
+                    </g>
+
+                    <g id="recB" class="receiver" transform="translate(240, 360)">
+                        <line x1="0" y1="0" x2="-12" y2="30" stroke="#64748b" stroke-width="2.5" />
+                        <line x1="0" y1="0" x2="12" y2="30" stroke="#64748b" stroke-width="2.5" />
+                        <path d="M -10 0 A 10 10 0 0 1 10 0 Z" fill="#334155" stroke="#1e293b" stroke-width="1" />
+                        <text x="-28" y="45" fill="#0f172a" font-size="12" font-weight="bold">接收机 B (b)</text>
+                    </g>
+                    
+                    <g id="baseline-dim">
+                        <line id="dim-line" x1="140" y1="410" x2="240" y2="410" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+                        <polygon points="140,410 145,407 145,413" fill="#64748b"/>
+                        <polygon id="dim-arrow-right" points="240,410 235,407 235,413" fill="#64748b"/>
+                        <text id="dim-text" x="190" y="425" fill="#64748b" font-size="11" text-anchor="middle">短基线 (&lt;10km)</text>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: var(--text-main);"></div><span>L: 观测值</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #334155;"></div><span>ρ: 几何距离</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-orange);"></div><span>c·dt_r: 接收机钟差</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--primary);"></div><span>c·dt^s: 卫星钟差</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-red);"></div><span>I: 电离层延迟</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--secondary);"></div><span>T: 对流层延迟</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-yellow);"></div><span>λN: 整周模糊度</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="step-wizard">
+                <div class="wizard-node active" id="node-1" onclick="setStep(1)">1. 非差方程</div>
+                <div class="wizard-node" id="node-2" onclick="setStep(2)">2. 站间单差</div>
+                <div class="wizard-node" id="node-3" onclick="setStep(3)">3. 站星双差</div>
+            </div>
+
+            <div class="math-content">
+                <div id="step-1-pane">
+                    <div class="explanation-box">
+                        <strong>非差观测方程 (Undifferenced)：</strong><br>
+                        这是最原始的GNSS原始载波相位观测方程（对应您图中的公式结构）。每个方程都饱受<strong>接收机钟差</strong>、<strong>卫星钟差</strong>以及<strong>电离层/对流层延迟</strong>的影响。
+                    </div>
+                    <div class="math-expr">
+                        <div class="math-block"><span class="p-obs">L<sub>A</sub><sup>1</sup></span> = <span class="p-rho">ρ<sub>A</sub><sup>1</sup></span> + <span class="p-dtr">c·dt<sub>A</sub></span> - <span class="p-dts">c·dt<sup>1</sup></span> - <span class="p-ion">I<sub>A</sub><sup>1</sup></span> + <span class="p-tro">T<sub>A</sub><sup>1</sup></span> + <span class="p-amb">λN<sub>A</sub><sup>1</sup></span></div>
+                        <div class="math-block"><span class="p-obs">L<sub>B</sub><sup>1</sup></span> = <span class="p-rho">ρ<sub>B</sub><sup>1</sup></span> + <span class="p-dtr">c·dt<sub>B</sub></span> - <span class="p-dts">c·dt<sup>1</sup></span> - <span class="p-ion">I<sub>B</sub><sup>1</sup></span> + <span class="p-tro">T<sub>B</sub><sup>1</sup></span> + <span class="p-amb">λN<sub>B</sub><sup>1</sup></span></div>
+                        <div class="math-block"><span class="p-obs">L<sub>A</sub><sup>2</sup></span> = <span class="p-rho">ρ<sub>A</sub><sup>2</sup></span> + <span class="p-dtr">c·dt<sub>A</sub></span> - <span class="p-dts">c·dt<sup>2</sup></span> - <span class="p-ion">I<sub>A</sub><sup>2</sup></span> + <span class="p-tro">T<sub>A</sub><sup>2</sup></span> + <span class="p-amb">λN<sub>A</sub><sup>2</sup></span></div>
+                        <div class="math-block"><span class="p-obs">L<sub>B</sub><sup>2</sup></span> = <span class="p-rho">ρ<sub>B</sub><sup>2</sup></span> + <span class="p-dtr">c·dt<sub>B</sub></span> - <span class="p-dts">c·dt<sup>2</sup></span> - <span class="p-ion">I<sub>B</sub><sup>2</sup></span> + <span class="p-tro">T<sub>B</sub><sup>2</sup></span> + <span class="p-amb">λN<sub>B</sub><sup>2</sup></span></div>
+                    </div>
+                </div>
+
+                <div id="step-2-pane" class="hidden">
+                    <div class="explanation-box">
+                        <strong>站间单差 (Between-Receiver Single Difference)：</strong><br>
+                        两台接收机对同一颗卫星作差。可<strong>完全消除卫星钟差</strong>，大气的消除效果取决于下方的基线长短设置。
+                    </div>
+                    <div class="math-expr">
+                        <div class="math-block">
+                            <span class="diff-operator">Δ</span>L<sub>AB</sub><sup>1</sup> = <span class="diff-operator">Δ</span>ρ<sub>AB</sub><sup>1</sup> + <span class="p-dtr">c·dt<sub>AB</sub></span> <span id="atm-sd1"></span> + <span class="p-amb">λΔN<sub>AB</sub><sup>1</sup></span>
+                        </div>
+                        <div class="math-block">
+                            <span class="diff-operator">Δ</span>L<sub>AB</sub><sup>2</sup> = <span class="diff-operator">Δ</span>ρ<sub>AB</sub><sup>2</sup> + <span class="p-dtr">c·dt<sub>AB</sub></span> <span id="atm-sd2"></span> + <span class="p-amb">λΔN<sub>AB</sub><sup>2</sup></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step-3-pane" class="hidden">
+                    <div class="explanation-box">
+                        <strong>站星双差 (Between-Satellite Double Difference)：</strong><br>
+                        对两颗卫星的单差进行二次作差。可<strong>完全消除接收机钟差</strong>，且模糊度保持整数特性！
+                    </div>
+                    <div class="math-expr">
+                        <div class="math-block" style="border: 2px solid var(--primary); background: rgba(2, 132, 199, 0.05);">
+                            <span class="diff-operator">∇Δ</span>L<sub>AB</sub><sup>12</sup> = <span class="diff-operator">∇Δ</span>ρ<sub>AB</sub><sup>12</sup> <span id="atm-dd-final"></span> + <span class="p-amb">λ∇ΔN<sub>AB</sub><sup>12</sup></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dynamic-atm-summary" style="margin-top:15px; padding:12px; background:#f8fafc; border-radius:6px; border: 1px solid var(--border); font-size:0.9rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let isShortBaseline = true;
+
+        function setStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.wizard-node').forEach(node => node.classList.remove('active'));
+            document.getElementById(`node-${step}`).classList.add('active');
+
+            document.getElementById('step-1-pane').classList.add('hidden');
+            document.getElementById('step-2-pane').classList.add('hidden');
+            document.getElementById('step-3-pane').classList.add('hidden');
+            document.getElementById(`step-${step}-pane`).classList.remove('hidden');
+
+            updateVisuals();
+        }
+
+        function toggleBaseline() {
+            const isChecked = document.getElementById('baseline-toggle').checked;
+            
+            const label = document.getElementById('baseline-label');
+            const recB = document.getElementById('recB');
+            const dimLine = document.getElementById('dim-line');
+            const dimText = document.getElementById('dim-text');
+            const dimArrowRight = document.getElementById('dim-arrow-right');
+            const rayB1 = document.getElementById('ray-B1');
+            const rayB2 = document.getElementById('ray-B2');
+
+            if (isChecked) {
+                isShortBaseline = false;
+                label.textContent = "长基线 (> 50 km)";
+                label.style.color = "var(--accent-red)";
+                recB.setAttribute('transform', 'translate(480, 360)');
+                
+                dimLine.setAttribute('x2', '480');
+                dimArrowRight.setAttribute('points', '480,410 475,407 475,413');
+                dimText.setAttribute('x', '310');
+                dimText.textContent = "中长基线(>50km)"; 
+                
+                rayB1.setAttribute('x2', '480');
+                rayB2.setAttribute('x2', '480');
+            } else {
+                isShortBaseline = true;
+                label.textContent = "短基线 (< 10 km)";
+                label.style.color = "var(--secondary)";
+                recB.setAttribute('transform', 'translate(240, 360)');
+                
+                dimLine.setAttribute('x2', '240');
+                dimArrowRight.setAttribute('points', '240,410 235,407 235,413');
+                dimText.setAttribute('x', '190');
+                dimText.textContent = "短基线 (<10km)"; 
+                
+                rayB1.setAttribute('x2', '240');
+                rayB2.setAttribute('x2', '240');
+            }
+
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            const atmSummary = document.getElementById('dynamic-atm-summary');
+            const sd1 = document.getElementById('atm-sd1');
+            const sd2 = document.getElementById('atm-sd2');
+            const ddFinal = document.getElementById('atm-dd-final');
+
+            if (currentStep === 1) {
+                atmSummary.innerHTML = `🌐 <strong>当前大气状态：</strong> 无论是长/短基线，非差模型均无法自行消除电离层和对流层延迟，必须依赖外部经验模型进行物理修正，残留误差仍然较大。`;
+            } 
+            else if (currentStep === 2) {
+                if (isShortBaseline) {
+                    if(sd1) sd1.innerHTML = `<span class="strike">- <span class="p-ion">ΔI<sub>AB</sub><sup>1</sup></span> + <span class="p-tro">ΔT<sub>AB</sub><sup>1</sup></span></span> <span style="color:var(--secondary); font-size:0.8rem; font-style:normal;">[≈0 消除]</span>`;
+                    if(sd2) sd2.innerHTML = `<span class="strike">- <span class="p-ion">ΔI<sub>AB</sub><sup>2</sup></span> + <span class="p-tro">ΔT<sub>AB</sub><sup>2</sup></span></span> <span style="color:var(--secondary); font-size:0.8rem; font-style:normal;">[≈0 消除]</span>`;
+                    atmSummary.innerHTML = `✨ <strong>短基线单差优势：</strong> 观测信号穿过的大气路径高度重合。单差后不仅<strong>完全消除了卫星钟差</strong>，且空间强相关的<strong>电离层与对流层延迟也基本抵交 (ΔI ≈ 0, ΔT ≈ 0)</strong>！`;
+                } else {
+                    if(sd1) sd1.innerHTML = `- <span class="p-ion">ΔI<sub>AB</sub><sup>1</sup></span> + <span class="p-tro">ΔT<sub>AB</sub><sup>1</sup></span> <span style="color:var(--accent-red); font-size:0.8rem; font-style:normal;">[残留项]</span>`;
+                    if(sd2) sd2.innerHTML = `- <span class="p-ion">ΔI<sub>AB</sub><sup>2</sup></span> + <span class="p-tro">ΔT<sub>AB</sub><sup>2</sup></span> <span style="color:var(--accent-red); font-size:0.8rem; font-style:normal;">[残留项]</span>`;
+                    atmSummary.innerHTML = `⚠️ <strong>长基线单差局限：</strong> 两测站相距较远，信号穿过不同的大气层。虽然卫星钟差完全消除了，但<strong>大气延迟不具备相似性，无法通过作差消除</strong>，单差方程中仍保留巨大的电离层和对流层残余项。`;
+                }
+            } 
+            else if (currentStep === 3) {
+                if (isShortBaseline) {
+                    if(ddFinal) ddFinal.innerHTML = ``;
+                    atmSummary.innerHTML = `🚀 <strong>短基线双差终极状态：</strong> 卫星钟差与接收机钟差<strong>全部完美消除</strong>！相似的大气误差也已<strong>全部抵消</strong>。方程中仅剩下干净的几何距离差 and <strong>保持整数特性的整周模糊度 ∇ΔN</strong>。这是厘米级高精度 <strong>RTK 定位</strong> 能够解算的基础！`;
+                } else {
+                    if(ddFinal) ddFinal.innerHTML = ` - <span class="p-ion">∇ΔI<sub>AB</sub><sup>12</sup></span> + <span class="p-tro">∇ΔT<sub>AB</sub><sup>12</sup></span>`;
+                    atmSummary.innerHTML = `📡 <strong>长基线双差状态：</strong> 虽然卫星钟差和接收机钟差已被完全消除，但由于两站间大气的不相似性，方程中<strong>依然残留了双差电离层 ∇ΔI 和双差对流层 ∇ΔT</strong>。长基线高精度作业必须将这些残留大气误差作为<strong>未知参数进行精细估计</strong>。`;
+                }
+            }
+        }
+
+        setStep(1);
+    </script>
+</body>
+</html>
