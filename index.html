@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI助教：为什么手机定位至少需要4颗卫星？</title>
+  <style>
+    :root {
+      --blue: #1f5fbf;
+      --blue-dark: #153f7f;
+      --blue-light: #eaf2ff;
+      --blue-soft: #f5f9ff;
+      --green: #18a058;
+      --red: #d93025;
+      --orange: #f29900;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d8e3f5;
+      --shadow: 0 10px 28px rgba(31, 95, 191, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+      color: var(--text);
+    }
+    .page {
+      width: 100%; min-height: 100vh; padding: 32px;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .slide {
+      width: min(1280px, 100%); min-height: 720px; background: #ffffff;
+      border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border);
+      overflow: hidden; position: relative;
+    }
+    .topbar { height: 12px; background: linear-gradient(90deg, var(--blue-dark), var(--blue), #59a7ff); }
+    .content { padding: 34px 42px 38px; }
+    .header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 24px; }
+    .title-block h1 { margin: 0; font-size: 38px; color: var(--blue-dark); letter-spacing: 0.5px; line-height: 1.25; }
+    .title-block p { margin: 10px 0 0; font-size: 18px; color: var(--muted); line-height: 1.6; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+      border-radius: 999px; background: var(--blue-light); color: var(--blue-dark);
+      font-weight: 700; font-size: 16px; white-space: nowrap; border: 1px solid #c9dcff;
+    }
+    .grid { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 24px; align-items: stretch; }
+    .card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: 0 6px 20px rgba(31, 95, 191, 0.06); }
+    .card h2 { margin: 0 0 14px; font-size: 25px; color: var(--blue-dark); display: flex; align-items: center; gap: 10px; }
+    .question-text { font-size: 21px; line-height: 1.75; margin: 10px 0 18px; }
+    .known-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 20px; }
+    .known-item { border-radius: 14px; padding: 14px 16px; background: var(--blue-soft); border: 1px solid #d8e8ff; font-size: 18px; line-height: 1.45; }
+    .known-item strong { color: var(--blue-dark); }
+    .options { display: grid; gap: 12px; margin-top: 18px; }
+    .option {
+      width: 100%; border: 2px solid #d8e3f5; background: #ffffff; border-radius: 14px;
+      padding: 15px 18px; font-size: 19px; text-align: left; color: var(--text); cursor: pointer;
+      transition: 0.18s ease; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .option:hover { border-color: var(--blue); background: #f7fbff; transform: translateY(-1px); }
+    .option.correct { border-color: var(--green); background: #effaf4; }
+    .option.wrong { border-color: var(--red); background: #fff3f2; }
+    .letter {
+      flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--blue-light);
+      color: var(--blue-dark); display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px;
+    }
+    .feedback { min-height: 94px; margin-top: 18px; padding: 16px 18px; border-radius: 16px; background: #f8fafc; border: 1px dashed #cbd5e1; font-size: 18px; line-height: 1.65; }
+    .feedback.good { background: #effaf4; border-color: #9bd8b4; color: #14532d; }
+    .feedback.bad { background: #fff7ed; border-color: #ffc875; color: #7c3f00; }
+    .ai-card { background: linear-gradient(180deg, #f7fbff, #ffffff); position: relative; overflow: hidden; }
+    .robot { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .robot-icon {
+      width: 62px; height: 62px; border-radius: 18px; background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; box-shadow: 0 8px 18px rgba(31, 95, 191, 0.22);
+    }
+    .robot-title { font-size: 24px; font-weight: 800; color: var(--blue-dark); margin: 0; }
+    .robot-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 16px; }
+    .summary { border-left: 5px solid var(--blue); background: #eef6ff; padding: 18px 20px; border-radius: 14px; font-size: 19px; line-height: 1.7; margin-bottom: 20px; }
+    .formula { display: flex; align-items: center; justify-content: center; padding: 20px 16px; background: #ffffff; border: 1px solid #d8e3f5; border-radius: 16px; font-size: 24px; font-weight: 800; color: var(--blue-dark); margin: 18px 0; text-align: center; }
+    .calculator { margin-top: 20px; padding: 20px; border-radius: 18px; background: #ffffff; border: 1px solid var(--border); }
+    .calculator h3 { margin: 0 0 14px; color: var(--blue-dark); font-size: 22px; }
+    .input-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 14px; }
+    input { width: 100%; padding: 14px 16px; border: 2px solid #d8e3f5; border-radius: 12px; font-size: 20px; outline: none; transition: 0.18s ease; }
+    input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(31, 95, 191, 0.12); }
+    .unit { font-size: 18px; color: var(--muted); font-weight: 700; }
+    .result { border-radius: 16px; padding: 16px 18px; background: var(--blue-soft); border: 1px solid #d8e8ff; font-size: 21px; line-height: 1.6; }
+    .result strong { color: var(--red); font-size: 28px; }
+    .hint { margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .bottom { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .step { padding: 14px 16px; border-radius: 14px; background: #ffffff; border: 1px solid #d8e3f5; font-size: 16px; line-height: 1.5; color: var(--text); }
+    .step b { color: var(--blue-dark); display: block; margin-bottom: 3px; }
+    .footer { position: absolute; left: 42px; right: 42px; bottom: 16px; display: flex; justify-content: space-between; align-items: center; color: #7b8794; font-size: 14px; border-top: 1px solid #edf2f7; padding-top: 10px; background: rgba(255,255,255,0.92); }
+    @media (max-width: 960px) {
+      .page { padding: 16px; }
+      .slide { min-height: auto; }
+      .content { padding: 26px 22px 70px; }
+      .header { display: block; }
+      .badge { margin-top: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .title-block h1 { font-size: 30px; }
+      .known-box, .bottom { grid-template-columns: 1fr; }
+      .footer { left: 22px; right: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="slide" aria-label="AI助教互动教学网页">
+      <div class="topbar"></div>
+      <div class="content">
+        <header class="header">
+          <div class="title-block">
+            <h1>AI助教：为什么手机定位至少需要4颗卫星？</h1>
+            <p>《GNSS原理及应用》互动教学网页 · 知识点：伪距单点定位</p>
+          </div>
+          <div class="badge">🤖 AI助教互动</div>
+        </header>
+
+        <div class="grid">
+          <section class="card">
+            <h2>① 课堂问题</h2>
+            <div class="known-box">
+              <div class="known-item"><strong>核心需求：</strong><br>求解手机三维坐标 X、Y、Z</div>
+              <div class="known-item"><strong>数学直觉：</strong><br>3个未知数似乎需要3颗卫星</div>
+              <div class="known-item"><strong>现实规则：</strong><br>GNSS定位至少需要4颗卫星</div>
+              <div class="known-item"><strong>关键矛盾：</strong><br>多出来的第4颗星在解什么？</div>
+            </div>
+
+            <p class="question-text">已知接收机需要求解 <b>X、Y、Z</b> 三个坐标，为什么GNSS仍要求至少4颗卫星？</p>
+
+            <div class="options" role="list">
+              <button class="option" onclick="checkAnswer('A', this)"><span class="letter">A</span><span>因为3颗卫星信号太弱</span></button>
+              <button class="option" onclick="checkAnswer('B', this)"><span class="letter">B</span><span>因为还要解算接收机钟差</span></button>
+              <button class="option" onclick="checkAnswer('C', this)"><span class="letter">C</span><span>因为卫星越多越省电</span></button>
+              <button class="option" onclick="checkAnswer('D', this)"><span class="letter">D</span><span>因为手机地图需要联网</span></button>
+            </div>
+
+            <div id="feedback" class="feedback">请点击一个选项，AI助教将给出即时反馈。</div>
+          </section>
+
+          <aside class="card ai-card">
+            <div class="robot">
+              <div class="robot-icon">AI</div>
+              <div>
+                <p class="robot-title">AI助教提示</p>
+                <p class="robot-subtitle">把生活现象转化为GNSS观测方程问题</p>
+              </div>
+            </div>
+
+            <div class="summary">现实中未知量不是3个，而是 <b>X、Y、Z</b> 和接收机钟差 <b>dt</b>，共 <b>4个未知数</b>，因此至少需要 <b>4颗卫星</b>。</div>
+            <div class="formula">X、Y、Z + dt = 4个未知数 → 至少4颗卫星</div>
+
+            <div class="calculator">
+              <h3>② 时间误差计算器</h3>
+              <div class="input-row">
+                <input id="timeInput" type="number" value="1" min="0" step="0.1" oninput="calculateError()" />
+                <span class="unit">微秒 μs</span>
+              </div>
+              <div class="result" id="resultBox">距离误差约为：<strong>300</strong> m</div>
+              <p class="hint">计算公式：距离误差 = 光速 × 时间误差。这里取光速 c ≈ 3 × 10⁸ m/s。</p>
+            </div>
+          </aside>
+        </div>
+
+        <div class="bottom">
+          <div class="step"><b>第一步：观察现象</b>手机迟迟不能定位，本质是卫星观测方程数量不足。</div>
+          <div class="step"><b>第二步：识别未知量</b>未知量不仅有位置坐标，还包括接收机钟差。</div>
+          <div class="step"><b>第三步：形成结论</b>第4颗卫星不是“多余”，而是用于联合求解时间误差。</div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>GNSS原理及应用 · 伪距单点定位</span>
+        <span>建议嵌入PPT第“问题引入”页作为课堂互动</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    function checkAnswer(choice, button) {
+      const options = document.querySelectorAll(".option");
+      const feedback = document.getElementById("feedback");
+      options.forEach(opt => opt.classList.remove("correct", "wrong"));
+
+      if (choice === "B") {
+        button.classList.add("correct");
+        feedback.className = "feedback good";
+        feedback.innerHTML = "✅ 回答正确！AI助教提示：GNSS接收机不仅要解算三维坐标 X、Y、Z，还要解算接收机钟差 dt。未知量变为4个，因此至少需要4颗卫星提供4个伪距观测方程。";
+      } else {
+        button.classList.add("wrong");
+        feedback.className = "feedback bad";
+        let reason = "";
+        if (choice === "A") reason = "卫星信号强弱会影响定位质量，但不是“至少4颗卫星”的根本原因。";
+        if (choice === "C") reason = "卫星数量与手机省电没有直接关系，这不是GNSS定位方程的约束条件。";
+        if (choice === "D") reason = "手机地图联网可以辅助加载地图或辅助定位，但GNSS定位本身的核心是卫星观测方程。";
+        feedback.innerHTML = "⚠️ 还需要再思考一下。" + reason + "<br><b>AI助教追问：</b>如果手机时钟不准，未知量是不是只有 X、Y、Z 三个？";
+      }
+    }
+
+    function calculateError() {
+      const input = document.getElementById("timeInput");
+      const resultBox = document.getElementById("resultBox");
+      const microseconds = parseFloat(input.value);
+      if (isNaN(microseconds) || microseconds < 0) {
+        resultBox.innerHTML = "请输入一个不小于0的时间误差。";
+        return;
+      }
+      const distance = microseconds * 300;
+      let displayDistance;
+      if (distance >= 1000) displayDistance = (distance / 1000).toFixed(2) + " km";
+      else if (distance >= 10) displayDistance = distance.toFixed(0) + " m";
+      else displayDistance = distance.toFixed(2) + " m";
+      resultBox.innerHTML = '距离误差约为：<strong>' + displayDistance + '</strong>';
+    }
+    calculateError();
+  </script>
+</body>
+</html>
