@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI助教：为什么手机定位至少需要4颗卫星？</title>
+  <style>
+    :root {
+      --blue: #1f5fbf;
+      --blue-dark: #123f7a;
+      --blue-light: #eaf3ff;
+      --blue-soft: #f6faff;
+      --border: #d9e6f7;
+      --text: #1f2937;
+      --muted: #667085;
+      --green: #16834a;
+      --orange: #d97706;
+      --shadow: 0 12px 32px rgba(31, 95, 191, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #ffffff 0%, #f1f7ff 100%);
+    }
+    .page {
+      min-height: 100vh;
+      padding: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .slide {
+      width: min(1280px, 100%);
+      min-height: 720px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .topbar {
+      height: 12px;
+      background: linear-gradient(90deg, var(--blue-dark), var(--blue), #67b2ff);
+    }
+    .content { padding: 34px 42px 44px; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.25;
+      color: var(--blue-dark);
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .badge {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1px solid #c9dcff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 6px 18px rgba(31, 95, 191, 0.06);
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 25px;
+      color: var(--blue-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .scene {
+      background: linear-gradient(180deg, #f6faff, #ffffff);
+      border: 1px solid #d8e8ff;
+      border-radius: 18px;
+      padding: 20px;
+      margin: 18px 0;
+    }
+    .phone-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .phone {
+      width: 120px;
+      height: 190px;
+      border-radius: 24px;
+      border: 7px solid #1f2937;
+      background: #ffffff;
+      position: relative;
+      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.14);
+      flex: 0 0 auto;
+    }
+    .phone::before {
+      content: "";
+      width: 46px;
+      height: 6px;
+      border-radius: 99px;
+      background: #1f2937;
+      position: absolute;
+      top: 9px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .phone-screen {
+      position: absolute;
+      inset: 25px 10px 10px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #eaf3ff, #ffffff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-dark);
+      font-weight: 900;
+      font-size: 20px;
+      text-align: center;
+      padding: 8px;
+      line-height: 1.3;
+    }
+    .sat-area {
+      flex: 1;
+      min-height: 190px;
+      position: relative;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 18% 28%, rgba(31, 95, 191, 0.12) 0 5px, transparent 6px),
+        radial-gradient(circle at 60% 18%, rgba(31, 95, 191, 0.12) 0 5px, transparent 6px),
+        radial-gradient(circle at 82% 56%, rgba(31, 95, 191, 0.12) 0 5px, transparent 6px),
+        linear-gradient(180deg, #ffffff, #f5f9ff);
+      border: 1px dashed #bcd3f2;
+      overflow: hidden;
+    }
+    .sat {
+      position: absolute;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #bcd3f2;
+      color: var(--blue-dark);
+      font-weight: 800;
+      font-size: 15px;
+      box-shadow: 0 4px 10px rgba(31, 95, 191, 0.08);
+    }
+    .sat.s1 { left: 10%; top: 16%; }
+    .sat.s2 { left: 48%; top: 8%; }
+    .sat.s3 { right: 9%; top: 40%; }
+    .sat.s4 { left: 36%; bottom: 12%; opacity: 0.38; }
+    .line {
+      position: absolute;
+      height: 2px;
+      background: rgba(31, 95, 191, 0.22);
+      transform-origin: left center;
+    }
+    .line.l1 { width: 190px; left: 17%; top: 32%; transform: rotate(30deg); }
+    .line.l2 { width: 180px; left: 52%; top: 24%; transform: rotate(98deg); }
+    .line.l3 { width: 170px; right: 12%; top: 54%; transform: rotate(150deg); }
+    .line.l4 { width: 150px; left: 43%; bottom: 24%; transform: rotate(-115deg); opacity: 0.25; }
+    .question {
+      font-size: 22px;
+      line-height: 1.65;
+      margin: 12px 0 18px;
+    }
+    .contrast {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .contrast div {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--blue-soft);
+      border: 1px solid #d8e8ff;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+    .contrast b { color: var(--blue-dark); }
+    .ai-card { background: linear-gradient(180deg, #f7fbff, #ffffff); }
+    .robot { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; }
+    .robot-icon {
+      width: 60px; height: 60px; border-radius: 18px;
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 900;
+      box-shadow: 0 8px 20px rgba(31, 95, 191, 0.22);
+    }
+    .robot-title { margin: 0; font-size: 24px; font-weight: 900; color: var(--blue-dark); }
+    .robot-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 16px; }
+    .step-box {
+      display: none;
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid #d8e8ff;
+      background: #ffffff;
+      margin-top: 14px;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+    .step-box.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .prompt {
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: #eef6ff;
+      border-left: 5px solid var(--blue);
+      font-size: 19px;
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+    .btn-row { display: grid; gap: 12px; margin-top: 14px; }
+    button { font-family: inherit; }
+    .choice {
+      width: 100%;
+      border: 2px solid #d8e3f5;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 18px;
+      line-height: 1.5;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.18s ease;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .choice:hover { border-color: var(--blue); background: #f7fbff; transform: translateY(-1px); }
+    .choice.correct { border-color: var(--green); background: #effaf4; color: #14532d; }
+    .choice.wrong { border-color: var(--orange); background: #fff7ed; color: #7c3f00; }
+    .letter {
+      flex: 0 0 auto;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--blue-light); color: var(--blue-dark);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px;
+    }
+    .feedback {
+      min-height: 88px;
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      font-size: 18px;
+      line-height: 1.65;
+    }
+    .feedback.good { background: #effaf4; border-color: #9bd8b4; color: #14532d; }
+    .feedback.warn { background: #fff7ed; border-color: #ffc875; color: #7c3f00; }
+    .action { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .secondary {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 800;
+      transition: 0.18s ease;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1px solid #c9dcff;
+    }
+    .secondary:hover { background: #ddebff; }
+    .reveal {
+      display: none;
+      margin-top: 16px;
+      border-radius: 18px;
+      padding: 20px;
+      background: linear-gradient(180deg, #eef6ff, #ffffff);
+      border: 2px solid #bcd3f2;
+    }
+    .reveal.active { display: block; animation: fadeIn 0.25s ease; }
+    .formula {
+      margin: 14px 0;
+      padding: 18px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid #d8e3f5;
+      color: var(--blue-dark);
+      text-align: center;
+      font-size: 25px;
+      font-weight: 900;
+    }
+    .note { color: var(--muted); font-size: 16px; line-height: 1.6; margin: 8px 0 0; }
+    .teaching-tip {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: #fbfdff;
+      border: 1px dashed #bcd3f2;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .footer {
+      position: absolute;
+      left: 42px; right: 42px; bottom: 16px;
+      border-top: 1px solid #edf2f7;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      color: #7b8794;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.92);
+    }
+    @media (max-width: 960px) {
+      .page { padding: 14px; align-items: flex-start; }
+      .slide { min-height: auto; }
+      .content { padding: 24px 20px 76px; }
+      .header, .grid { display: block; }
+      .badge { margin-top: 14px; }
+      h1 { font-size: 30px; }
+      .grid { display: grid; grid-template-columns: 1fr; }
+      .contrast { grid-template-columns: 1fr; }
+      .phone-row { flex-direction: column; align-items: stretch; }
+      .phone { margin: 0 auto; }
+      .footer { left: 20px; right: 20px; flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="slide" aria-label="AI助教互动教学网页">
+      <div class="topbar"></div>
+      <div class="content">
+        <header class="header">
+          <div>
+            <h1>AI助教：为什么手机定位至少需要4颗卫星？</h1>
+            <p class="subtitle">《GNSS原理及应用》互动导入 · 先提出矛盾，再揭示关键未知量</p>
+          </div>
+          <div class="badge">🤖 AI助教 · 课堂追问</div>
+        </header>
+        <div class="grid">
+          <section class="card">
+            <h2>① 情境导入：手机为什么迟迟不能定位？</h2>
+            <div class="scene">
+              <div class="phone-row">
+                <div class="phone"><div class="phone-screen">正在<br>搜索卫星...</div></div>
+                <div class="sat-area" aria-label="卫星搜索示意图">
+                  <div class="line l1"></div><div class="line l2"></div><div class="line l3"></div><div class="line l4"></div>
+                  <div class="sat s1">卫星1</div><div class="sat s2">卫星2</div><div class="sat s3">卫星3</div><div class="sat s4">第4颗？</div>
+                </div>
+              </div>
+            </div>
+            <p class="question">
+              我们的目标只是确定手机在地球上的三维坐标 <b>X、Y、Z</b>。按数学直觉，3个未知数似乎只需要3个方程。
+            </p>
+            <div class="contrast">
+              <div><b>数学直觉</b><br>3个未知数 → 3颗卫星似乎足够</div>
+              <div><b>现实规则</b><br>GNSS定位通常要求至少4颗卫星</div>
+            </div>
+            <div class="teaching-tip">
+              思考建议：从3颗卫星似乎够用的判断出发，通过AI助教追问。
+            </div>
+          </section>
+          <section class="card ai-card">
+            <div class="robot">
+              <div class="robot-icon">AI</div>
+              <div>
+                <p class="robot-title">AI助教不直接给答案</p>
+                <p class="robot-subtitle">先追问：你的数学直觉有没有隐藏前提？</p>
+              </div>
+            </div>
+            <div id="step1" class="step-box active">
+              <div class="prompt"><b>AI助教提问1：</b><br>如果只看三维坐标 X、Y、Z，你认为几颗卫星“看起来”就可以定位？</div>
+              <div class="btn-row">
+                <button class="choice" onclick="answerStep1('2', this)"><span class="letter">A</span><span>2颗卫星就够了</span></button>
+                <button class="choice" onclick="answerStep1('3', this)"><span class="letter">B</span><span>3颗卫星看起来就够了</span></button>
+                <button class="choice" onclick="answerStep1('4', this)"><span class="letter">C</span><span>必须一开始就用4颗卫星</span></button>
+              </div>
+              <div id="feedback1" class="feedback">请先根据“3个未知数、3个方程”的数学直觉做出选择。</div>
+            </div>
+            <div id="step2" class="step-box">
+              <div class="prompt"><b>AI助教提问2：</b><br>“3颗卫星似乎够用”这个判断，隐含了下面哪个前提？</div>
+              <div class="btn-row">
+                <button class="choice" onclick="answerStep2('A', this)"><span class="letter">A</span><span>手机必须联网</span></button>
+                <button class="choice" onclick="answerStep2('B', this)"><span class="letter">B</span><span>接收机与卫星的时间完全同步</span></button>
+                <button class="choice" onclick="answerStep2('C', this)"><span class="letter">C</span><span>卫星越多越省电</span></button>
+                <button class="choice" onclick="answerStep2('D', this)"><span class="letter">D</span><span>地球表面是完全平面的</span></button>
+              </div>
+              <div id="feedback2" class="feedback">请选择一个“隐藏前提”。AI助教将根据你的选择继续追问。</div>
+            </div>
+            <div id="reveal" class="reveal">
+              <b style="color: var(--blue-dark); font-size: 22px;">③ 关键揭示</b>
+              <p style="font-size: 18px; line-height: 1.75; margin: 12px 0;">
+                理想几何交会中，3颗卫星似乎可以约束三维位置。但现实中的手机接收机时间并不与卫星时间完全同步，因此还要额外求解一个时间相关未知量。
+              </p>
+              <div class="formula">X、Y、Z + dt = 4个未知数 → 至少4颗卫星</div>
+              <p class="note">课堂过渡语：接下来我们不急着给结论，而是从“几何空间交会”开始，看3颗卫星为什么只在理想时间同步条件下才看似够用。</p>
+            </div>
+            <div class="action"><button class="secondary" onclick="resetAll()">重新开始互动</button></div>
+          </section>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>GNSS原理及应用 · 伪距单点定位</span>
+        <span>互动定位：问题引入页使用，不提前暴露完整答案</span>
+      </footer>
+    </section>
+  </main>
+  <script>
+    function clearChoices(containerId) {
+      const box = document.getElementById(containerId);
+      box.querySelectorAll(".choice").forEach(btn => btn.classList.remove("correct", "wrong"));
+    }
+    function answerStep1(choice, btn) {
+      clearChoices("step1");
+      const feedback = document.getElementById("feedback1");
+      if (choice === "3") {
+        btn.classList.add("correct");
+        feedback.className = "feedback good";
+        feedback.innerHTML = "✅ 很好！如果只看 X、Y、Z 三个坐标，3颗卫星确实“看起来”够用。<br><b>AI助教追问：</b>这个判断有没有默认某个条件已经成立？";
+      } else {
+        btn.classList.add("wrong");
+        feedback.className = "feedback warn";
+        feedback.innerHTML = "⚠️ 先从数学直觉出发：三维坐标有 X、Y、Z 三个未知数，所以3颗卫星“看起来”最符合直觉。<br><b>AI助教追问：</b>这个直觉是否一定适用于真实手机定位？";
+      }
+      document.getElementById("step2").classList.add("active");
+      document.getElementById("reveal").classList.remove("active");
+    }
+    function answerStep2(choice, btn) {
+      clearChoices("step2");
+      const feedback = document.getElementById("feedback2");
+      if (choice === "B") {
+        btn.classList.add("correct");
+        feedback.className = "feedback good";
+        feedback.innerHTML = "✅ 正确！3颗卫星够用的前提是：接收机和卫星时间完全同步。现实中这个前提并不成立，所以会多出一个需要求解的时间未知量。";
+        document.getElementById("reveal").classList.add("active");
+      } else {
+        btn.classList.add("wrong");
+        feedback.className = "feedback warn";
+        feedback.innerHTML = "⚠️ 这个选项不是关键前提。请重点思考：GNSS测距依靠“信号传播时间”，如果手机自己的时间不准，会发生什么？";
+        document.getElementById("reveal").classList.remove("active");
+      }
+    }
+    function resetAll() {
+      ["step1", "step2"].forEach(id => clearChoices(id));
+      document.getElementById("step2").classList.remove("active");
+      document.getElementById("reveal").classList.remove("active");
+      document.getElementById("feedback1").className = "feedback";
+      document.getElementById("feedback1").innerHTML = "请先根据“3个未知数、3个方程”的数学直觉做出选择。";
+      document.getElementById("feedback2").className = "feedback";
+      document.getElementById("feedback2").innerHTML = "请选择一个“隐藏前提”。AI助教将根据你的选择继续追问。";
+    }
+  </script>
+</body>
+</html>
